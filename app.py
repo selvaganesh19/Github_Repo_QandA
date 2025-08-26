@@ -1,4 +1,4 @@
-import os, shutil, tempfile, re, json
+import os, shutil, tempfile, re, json, hashlib
 from pathlib import Path
 from dotenv import load_dotenv
 import gradio as gr
@@ -43,10 +43,19 @@ def chunk_text(text):
     splitter=RecursiveCharacterTextSplitter(chunk_size=2000,chunk_overlap=200)
     return splitter.split_text(text)
 
-def build_vs(chunks):
+def url_to_dir(url):
+    h=hashlib.sha1(url.encode()).hexdigest()[:12]
+    return str(Path(INDEX_DIR)/h)
+
+def build_vs(chunks, idx_dir):
     emb=AzureOpenAIEmbeddings(deployment=EMB_DEPLOY,azure_endpoint=ENDPOINT,api_key=API_KEY)
     vs=FAISS.from_texts(chunks,emb)
-    return vs
+    vs.save_local(idx_dir)
+    return idx_dir
+
+def load_vs(idx_dir):
+    emb=AzureOpenAIEmbeddings(deployment=EMB_DEPLOY,azure_endpoint=ENDPOINT,api_key=API_KEY)
+    return FAISS.load_local(idx_dir,emb,allow_dangerous_deserialization=True)
 
 def make_llm(temp=0.3):
     return AzureChatOpenAI(deployment_name=CHAT_DEPLOY,azure_endpoint=ENDPOINT,api_key=API_KEY,temperature=temp)
@@ -98,24 +107,28 @@ def analyze_repo(url):
         text=read_repo_text(repo_dir)
         if not text.strip(): return None,"No readable text files found"
         chunks=chunk_text(text)
-        vs=build_vs(chunks)
-        return vs,"Ready. Vector index built."
+        idx_dir=url_to_dir(url.strip())
+        Path(idx_dir).parent.mkdir(parents=True,exist_ok=True)
+        build_vs(chunks, idx_dir)
+        return idx_dir,"Ready. Vector index built."
     except Exception as e:
         return None,f"Error: {e}"
     finally:
         if repo_dir and Path(repo_dir).exists(): shutil.rmtree(repo_dir,ignore_errors=True)
 
 def on_analyze(url):
-    vs,status=analyze_repo(url)
-    return vs,status
+    idx_dir,status=analyze_repo(url)
+    return idx_dir,status
 
 def on_generate(vs_state, n):
-    if vs_state is None: return "Please analyze a repo first."
-    return generate_qa_from_context(vs_state,int(n))
+    if not vs_state: return "Please analyze a repo first."
+    vs=load_vs(vs_state)
+    return generate_qa_from_context(vs,int(n))
 
 def on_ask_one(vs_state, topic):
-    if vs_state is None: return "Please analyze a repo first."
-    return ask_one(vs_state, topic or "")
+    if not vs_state: return "Please analyze a repo first."
+    vs=load_vs(vs_state)
+    return ask_one(vs, topic or "")
 
 with gr.Blocks(title="Repo Interview Prep · Azure OpenAI") as demo:
     gr.Markdown("# Repo Interview Prep\nPaste a GitHub repo URL. Get **real interview questions** grounded in its code, with **model answers**.")
