@@ -140,4 +140,4 @@ with gr.Blocks(title="Repo Interview Prep · Azure OpenAI") as demo:
     ask_btn.click(on_ask_one,inputs=[vs_state,topic],outputs=[single_out])
 
 if __name__=="__main__":
-    demo.launch()
+    demo.launch(debug=True)
