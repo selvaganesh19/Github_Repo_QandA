@@ -1,0 +1,5 @@
+.env
+__pycache__/
+.tmp_repo/
+faiss_index/
+.cache/
