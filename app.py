@@ -12,6 +12,7 @@ API_KEY=os.getenv("AZURE_OPENAI_API_KEY")
 ENDPOINT=os.getenv("AZURE_OPENAI_ENDPOINT")
 CHAT_DEPLOY=os.getenv("AZURE_OPENAI_DEPLOYMENT")
 EMB_DEPLOY=os.getenv("AZURE_OPENAI_EMBEDDING_DEPLOYMENT")
+API_VERSION=os.getenv("AZURE_OPENAI_VERSION")
 
 ALLOWED_EXT={".py",".ipynb",".md",".txt",".js",".ts",".tsx",".jsx",".java",".kt",".c",".cpp",".cs",".go",".rs",".rb",".php",".sql",".html",".css",".yml",".yaml",".toml",".ini",".json"}
 SKIP_DIRS={"node_modules",".git","dist","build","out","venv",".venv","__pycache__",".next",".cache","target","bin","obj",".idea",".vscode"}
@@ -48,17 +49,34 @@ def url_to_dir(url):
     return str(Path(INDEX_DIR)/h)
 
 def build_vs(chunks, idx_dir):
-    emb=AzureOpenAIEmbeddings(deployment=EMB_DEPLOY,azure_endpoint=ENDPOINT,api_key=API_KEY)
+    emb=AzureOpenAIEmbeddings(
+        deployment=EMB_DEPLOY,
+        azure_endpoint=ENDPOINT,
+        api_key=API_KEY,
+        api_version=API_VERSION
+    )
     vs=FAISS.from_texts(chunks,emb)
     vs.save_local(idx_dir)
     return idx_dir
 
 def load_vs(idx_dir):
-    emb=AzureOpenAIEmbeddings(deployment=EMB_DEPLOY,azure_endpoint=ENDPOINT,api_key=API_KEY)
+    emb=AzureOpenAIEmbeddings(
+        deployment=EMB_DEPLOY,
+        azure_endpoint=ENDPOINT,
+        api_key=API_KEY,
+        api_version=API_VERSION
+    )
     return FAISS.load_local(idx_dir,emb,allow_dangerous_deserialization=True)
 
+
 def make_llm(temp=0.3):
-    return AzureChatOpenAI(deployment_name=CHAT_DEPLOY,azure_endpoint=ENDPOINT,api_key=API_KEY,temperature=temp)
+        return AzureChatOpenAI(
+        deployment_name=CHAT_DEPLOY,
+        azure_endpoint=ENDPOINT,
+        api_key=API_KEY,
+        api_version=API_VERSION,
+        temperature=temp
+    )
 
 def sample_corpus_for_brief(vs, n=30):
     qs=[
