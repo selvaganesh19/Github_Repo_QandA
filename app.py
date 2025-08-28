@@ -49,7 +49,7 @@ def analyze_repo(url):
     finally:
         if repo_dir and Path(repo_dir).exists(): shutil.rmtree(repo_dir,ignore_errors=True)
 
-def make_llm(temp=0.3):
+def make_llm(temp=0.8):
     return AzureChatOpenAI(
         deployment_name=CHAT_DEPLOY,
         azure_endpoint=ENDPOINT,
@@ -60,10 +60,7 @@ def make_llm(temp=0.3):
 
 def generate_qa_from_context(repo_text, n_questions=10):
     llm=make_llm(0.2)
-    sys=("You are a principal engineer conducting a rigorous technical interview about a specific GitHub repository. "
-         "Ask targeted, realistic questions grounded in the repo's actual code and config, then give ideal, precise answers. "
-         "Focus on architecture, trade-offs, complexity, testing, performance, security, deployment, data models, and pitfalls. "
-         "Avoid generic fluff. Keep each answer concise but substantive.")
+    sys=("You are a principal engineer conducting a rigorous technical interview about a specific GitHub repository. Ask only realistic, challenging interview questions directly grounded in the repo's actual code, configuration, and design choices. Focus on probing the candidate’s reasoning behind trade-offs. Why they chose one tool, library, or framework over alternatives. Why this approach is better or worse compared to others. How decisions impact performance, scalability, testing, security, and maintainability. Do not ask generic or surface-level question Keep questions precise, technical, and focused on why this, not that reasoning.")
     fmt=("Using only the repo context below, produce {n} Q&A pairs.\n"
          "Context:\n\"\"\"\n{ctx}\n\"\"\"\n"
          "Format strictly:\nQ1: ...\nA1: ...\nQ2: ...\nA2: ...\n... up to Q{n}/A{n}.\n"
@@ -75,7 +72,7 @@ def generate_qa_from_context(repo_text, n_questions=10):
 def ask_one(repo_text, topic):
     llm=make_llm(0.2)
     ctx=repo_text[:6000]
-    sys=("You are a senior interviewer. Ask ONE tough, repo-specific question, then give the ideal answer.")
+    sys=("You are a senior interviewer. Ask ONE tough, repo-specific question, then give the detailed answer.")
     usr=(f"Repo context:\n\"\"\"\n{ctx}\n\"\"\"\n"
          f"Focus: {topic or 'most critical part of this repository'}\n"
          "Output format:\nQ: <question>\nA: <answer>\nNo preamble.")
