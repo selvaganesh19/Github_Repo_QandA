@@ -5,66 +5,77 @@
   <title>GitHub Repo Q&A</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="icon" href="data:," />
+  <!-- Google Fonts: Inter and Fira Mono -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Fira+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <!-- Font Awesome for icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
 
   <style>
-    /* Color system: EXACTLY 5 colors total */
+    /* Color system: 5 colors */
     :root {
-      --color-primary: #2563eb;   /* Primary (blue) */
-      --color-bg: #ffffff;         /* Neutral 1 */
-      --color-text: #111827;       /* Neutral 2 */
-      --color-border: #e5e7eb;     /* Neutral 3 */
-      --color-danger: #ef4444;     /* Accent (error) */
+      --color-primary: #0c0e12;   /* Primary (blue) */
+      --color-bg: #6fb92b;        /* Soft light background */
+      --color-text: #1a2233;      /* Deep neutral text */
+      --color-border: #e5e7eb;    /* Neutral border */
+      --color-danger: #ef4444;    /* Accent (error/red) */
     }
 
     @media (prefers-color-scheme: dark) {
       :root {
-        --color-bg: #111827;      /* swap neutrals for dark mode */
-        --color-text: #ffffff;
-        /* Keep same 5 colors; reuse primary/border/danger as-is */
+        --color-bg: #181f2a;
+        --color-text: #f4f7fb;
       }
     }
 
-    /* Base */
-    * { box-sizing: border-box; }
     html, body { height: 100%; }
     body {
       margin: 0;
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";
+      font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";
       color: var(--color-text);
       background: var(--color-bg);
-      line-height: 1.55;
+      line-height: 1.6;
+      min-height: 100vh;
+      letter-spacing: 0.01em;
     }
 
-    /* Layout */
     .container {
-      max-width: 880px;
-      padding: 20px;
+      max-width: 900px;
+      padding: 32px 18px 24px 18px;
       margin: 0 auto;
     }
 
     header {
       padding: 12px 0 20px;
+      text-align: center;
     }
 
     .title {
-      font-size: 1.5rem;
+      font-size: 2.1rem;
       font-weight: 700;
       letter-spacing: -0.01em;
       margin: 0 0 6px;
+      font-family: 'Inter', system-ui, sans-serif;
     }
 
     .subtitle {
       margin: 0;
-      color: rgba(17, 24, 39, 0.7);
+      color: rgba(26,34,51,0.7);
+      font-size: 1.1rem;
+      font-family: 'Inter', system-ui, sans-serif;
     }
     @media (prefers-color-scheme: dark) {
-      .subtitle { color: rgba(255,255,255,0.75); }
+      .subtitle { color: rgba(244,247,251,0.75); }
     }
 
     .card {
       border: 1px solid var(--color-border);
-      border-radius: 12px;
-      padding: 16px;
+      border-radius: 16px;
+      padding: 22px 18px 18px 18px;
+      background: #887474;
+      box-shadow: 0 2px 12px 0 rgba(37,99,235,0.04);
+    }
+    @media (prefers-color-scheme: dark) {
+      .card { background: #232b3a; }
     }
 
     .grid {
@@ -77,7 +88,6 @@
       }
     }
 
-    /* Form */
     .field {
       display: grid;
       gap: 6px;
@@ -85,15 +95,17 @@
 
     label {
       font-weight: 600;
-      font-size: 0.95rem;
+      font-size: 1rem;
+      font-family: 'Inter', system-ui, sans-serif;
     }
 
     .hint {
-      font-size: 0.88rem;
-      color: rgba(17, 24, 39, 0.75);
+      font-size: 0.93rem;
+      color: rgba(26,34,51,0.7);
+      font-family: 'Inter', system-ui, sans-serif;
     }
     @media (prefers-color-scheme: dark) {
-      .hint { color: rgba(255,255,255,0.8); }
+      .hint { color: rgba(244,247,251,0.8); }
     }
 
     input[type="text"],
@@ -101,6 +113,7 @@
     button,
     textarea {
       width: 100%;
+      font-family: 'Inter', system-ui, sans-serif;
     }
 
     input[type="text"] {
@@ -116,7 +129,7 @@
 
     input[type="text"]:focus {
       border-color: var(--color-primary);
-      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.25);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.18);
     }
 
     .range-row {
@@ -165,10 +178,16 @@
       padding: 10px 14px;
       font-weight: 600;
       cursor: pointer;
-      color: #fff; /* uses only text white which is our neutral text var? We keep explicit white here via contrast; does not add a new palette because text color is semantic */
+      color: #fff;
       background: var(--color-primary);
       transition: filter 0.15s ease, transform 0.05s ease;
+      font-family: 'Inter', system-ui, sans-serif;
+      font-size: 1rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
     }
+    button i { font-size: 1.1em; }
     button:hover { filter: brightness(0.95); }
     button:active { transform: translateY(1px); }
 
@@ -191,7 +210,7 @@
       display: flex;
       align-items: center;
       gap: 8px;
-      font-size: 0.95rem;
+      font-size: 0.98rem;
       min-height: 24px;
     }
 
@@ -225,22 +244,29 @@
     .output-area {
       border: 1px solid var(--color-border);
       border-radius: 12px;
-      padding: 12px;
-      background: var(--color-bg);
+      padding: 16px 14px;
+      background: #f9fafb;
       color: var(--color-text);
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-family: 'Fira Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
       white-space: pre-wrap;
       min-height: 240px;
       overflow: auto;
+      font-size: 1.04rem;
+      line-height: 1.7;
+    }
+    @media (prefers-color-scheme: dark) {
+      .output-area { background: #1a2233; }
     }
 
     footer {
       margin-top: 20px;
-      font-size: 0.85rem;
-      color: rgba(17, 24, 39, 0.6);
+      font-size: 0.95rem;
+      color: rgba(26,34,51,0.6);
+      font-family: 'Inter', system-ui, sans-serif;
+      text-align: center;
     }
     @media (prefers-color-scheme: dark) {
-      footer { color: rgba(255,255,255,0.7); }
+      footer { color: rgba(244,247,251,0.7); }
     }
 
     /* Utility */
@@ -252,13 +278,21 @@
       border: 0; white-space: nowrap;
     }
     .qa-q {
-    color: var(--color-primary);
-    font-weight: 600;
-  }
-  .qa-a {
-    color: var(--color-danger);
-    font-weight: 500;
-  }
+      color: var(--color-primary);
+      font-weight: 600;
+    }
+    .qa-a {
+      color: var(--color-danger);
+      font-weight: 500;
+    }
+    .download-btn {
+      margin-top: 10px;
+      width: auto;
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 1rem;
+    }
   </style>
 
 <script type="module">
@@ -278,7 +312,6 @@
     }
   }
 
-  // Simple GitHub repo URL validation
   function isValidRepoUrl(url) {
     const pattern = /^https?:\/\/(www\.)?github\.com\/[^\/\s]+\/[^\/\s#?]+\/?$/i;
     return pattern.test(url);
@@ -288,12 +321,14 @@
     const runBtn = document.getElementById("runBtn");
     const clearBtn = document.getElementById("clearBtn");
     const copyBtn = document.getElementById("copyBtn");
+    const downloadBtn = document.getElementById("downloadBtn");
     const status = document.getElementById("statusText");
     const spin = document.getElementById("spinner");
 
     runBtn.disabled = running;
     clearBtn.disabled = running;
     copyBtn.disabled = running;
+    downloadBtn.disabled = running;
 
     if (running) {
       spin.style.display = "inline-block";
@@ -349,6 +384,14 @@
     }).join('<br>');
   }
 
+  // Get plain text Q&A for download
+  function getQAText(qaText) {
+    let qaSection = qaText;
+    const idx = qaSection.search(/Q&A:/i);
+    if (idx !== -1) qaSection = qaSection.slice(idx + 4);
+    return qaSection.trim();
+  }
+
   async function runAnalysis() {
     const urlEl = document.getElementById("repoUrl");
     const topicEl = document.getElementById("topic");
@@ -390,6 +433,7 @@
       // Only show Q&A section, colored
       const qaContent = (qa?.data?.[0] ?? "");
       outEl.innerHTML = renderQAColored(qaContent);
+      outEl.setAttribute("data-raw", qaContent); // Save for download
       status.textContent = "Done";
 
     } catch (err) {
@@ -402,6 +446,7 @@
 
   function clearAll() {
     document.getElementById("output").textContent = "";
+    document.getElementById("output").removeAttribute("data-raw");
     document.getElementById("errorMsg").textContent = "";
     document.getElementById("statusText").textContent = "";
     document.getElementById("repoUrl").focus();
@@ -421,7 +466,24 @@
     } catch {}
   }
 
-  // Keyboard and UI setup
+  function downloadOutput() {
+    const outEl = document.getElementById("output");
+    const raw = outEl.getAttribute("data-raw") || "";
+    const text = getQAText(raw);
+    if (!text) return;
+    const blob = new Blob([text], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "repo-qa.txt";
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => {
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }, 200);
+  }
+
   window.addEventListener("DOMContentLoaded", () => {
     restoreState();
     // Range value bubble
@@ -442,13 +504,14 @@
     document.getElementById("runBtn").addEventListener("click", runAnalysis);
     document.getElementById("clearBtn").addEventListener("click", clearAll);
     document.getElementById("copyBtn").addEventListener("click", copyOutput);
+    document.getElementById("downloadBtn").addEventListener("click", downloadOutput);
   });
 </script>
 </head>
 <body>
   <div class="container">
     <header>
-      <h1 class="title text-balance">GitHub Project Q&amp;A</h1>
+      <h1 class="title text-balance"><i class="fa-brands fa-github"></i> GitHub Project Q&amp;A</h1>
       <p class="subtitle">Analyze a GitHub repository, optionally focus on a topic, and generate Q&amp;A — works on any device.</p>
     </header>
 
@@ -463,9 +526,9 @@
           </div>
 
           <div class="field">
-            <label for="topic">Optional Focus Topic</label>
+            <!-- <label for="topic">Optional Focus Topic</label>
             <input id="topic" type="text" placeholder="e.g., auth, DB, CI/CD" />
-            <div class="hint">If provided, we’ll fetch additional insights for this topic.</div>
+            <div class="hint">If provided, we’ll fetch additional insights for this topic.</div> -->
           </div>
 
           <div class="field">
@@ -480,9 +543,10 @@
           <div class="field">
             <label class="sr-only">Actions</label>
             <div class="actions">
-              <button id="runBtn" type="button" title="Run Analysis">Run Analysis</button>
-              <button id="copyBtn" type="button" class="btn-secondary" title="Copy output">Copy Output</button>
-              <button id="clearBtn" type="button" class="btn-secondary" title="Clear output">Clear</button>
+              <button id="runBtn" type="button" title="Run Analysis"><i class="fa-solid fa-play"></i> Run Analysis</button>
+              <button id="copyBtn" type="button" class="btn-secondary" title="Copy output"><i class="fa-regular fa-copy"></i> Copy Output</button>
+              <button id="downloadBtn" type="button" class="btn-secondary download-btn" title="Download output"><i class="fa-solid fa-download"></i> Download</button>
+              <button id="clearBtn" type="button" class="btn-secondary" title="Clear output"><i class="fa-solid fa-eraser"></i> Clear</button>
             </div>
             <div class="status" aria-live="polite" aria-atomic="true">
               <span id="spinner" class="spinner" style="display:none" aria-hidden="true"></span>
@@ -499,6 +563,7 @@
       </section>
 
       <footer>
+        <i class="fa-regular fa-lightbulb"></i>
         Tip: Press Enter while focused in a text field to run analysis. Your last inputs are saved locally.
       </footer>
     </main>
