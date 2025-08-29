@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>GitHub Repo Q&A</title>
+  <script type="module">
+    import { Client } from "https://cdn.jsdelivr.net/npm/@gradio/client/dist/index.min.js";
+
+    let client;
+    (async () => {
+      client = await Client.connect("PraneshJs/GithubprojectQandA");
+    })();
+
+    async function runAnalysis() {
+      const url = document.getElementById("repoUrl").value.trim();
+      const topic = document.getElementById("topic").value.trim();
+      const n = document.getElementById("numQ").value;
+
+      if (!url) {
+        alert("Please enter a GitHub repo URL (mandatory).");
+        return;
+      }
+
+      document.getElementById("output").textContent = "Processing...";
+
+      try {
+        // Step 1: Run mandatory analysis
+        const analysis = await client.predict("/on_analyze", { url });
+        
+        // Step 2: Run optional ask_one if topic given
+        let askResult = "";
+        if (topic) {
+          const ask = await client.predict("/on_ask_one", { topic });
+          askResult = "\n\nOptional Topic Insights:\n" + ask.data[0];
+        }
+
+        // Step 3: Generate Q&A with adjustable size
+        const qa = await client.predict("/on_generate", { n: Number(n) });
+
+        document.getElementById("output").textContent =
+          "Analysis:\n" + analysis.data[0] +
+          askResult +
+          "\n\nQ&A:\n" + qa.data[0];
+
+      } catch (err) {
+        document.getElementById("output").textContent = "Error: " + err;
+      }
+    }
+  </script>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 2rem; }
+    input, button, textarea { margin-top: 0.5rem; padding: 0.5rem; width: 100%; }
+    button { cursor: pointer; background: #007bff; color: white; border: none; }
+    button:hover { background: #0056b3; }
+    textarea { height: 300px; white-space: pre-wrap; }
+    label { font-weight: bold; margin-top: 1rem; display: block; }
+  </style>
+</head>
+<body>
+  <h2>GitHub Project Q&A Frontend</h2>
+
+  <label>GitHub Repo URL (mandatory):</label>
+  <input type="text" id="repoUrl" placeholder="https://github.com/username/repo">
+
+  <label>Optional Focus Topic (e.g., auth, DB, CI/CD):</label>
+  <input type="text" id="topic" placeholder="Optional">
+
+  <label>Number of Q&A (adjustable): <span id="qval">5</span></label>
+  <input type="range" id="numQ" min="1" max="20" value="5" oninput="qval.textContent=this.value">
+
+  <button onclick="runAnalysis()">Run Analysis</button>
+
+  <label>Output:</label>
+  <textarea id="output" readonly></textarea>
+</body>
+</html>
