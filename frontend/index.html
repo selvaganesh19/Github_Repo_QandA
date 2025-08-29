@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <title>GitHub Repo Q&A</title>
+  <link rel="icon" href="data:,"><!-- prevents favicon 404 -->
   <script type="module">
     import { Client } from "https://cdn.jsdelivr.net/npm/@gradio/client/dist/index.min.js";
 
@@ -11,7 +12,7 @@
       client = await Client.connect("PraneshJs/GithubprojectQandA");
     })();
 
-    async function runAnalysis() {
+    window.runAnalysis = async function () {
       const url = document.getElementById("repoUrl").value.trim();
       const topic = document.getElementById("topic").value.trim();
       const n = document.getElementById("numQ").value;
@@ -24,17 +25,14 @@
       document.getElementById("output").textContent = "Processing...";
 
       try {
-        // Step 1: Run mandatory analysis
         const analysis = await client.predict("/on_analyze", { url });
-        
-        // Step 2: Run optional ask_one if topic given
+
         let askResult = "";
         if (topic) {
           const ask = await client.predict("/on_ask_one", { topic });
           askResult = "\n\nOptional Topic Insights:\n" + ask.data[0];
         }
 
-        // Step 3: Generate Q&A with adjustable size
         const qa = await client.predict("/on_generate", { n: Number(n) });
 
         document.getElementById("output").textContent =
