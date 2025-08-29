@@ -342,10 +342,10 @@
   function saveState() {
     try {
       const url = document.getElementById("repoUrl").value.trim();
-      const topic = document.getElementById("topic").value.trim();
+      // const topic = document.getElementById("topic").value.trim(); // topic removed
       const n = document.getElementById("numQ").value;
       localStorage.setItem("ghqa:url", url);
-      localStorage.setItem("ghqa:topic", topic);
+      // localStorage.setItem("ghqa:topic", topic);
       localStorage.setItem("ghqa:n", n);
     } catch {}
   }
@@ -353,11 +353,11 @@
   function restoreState() {
     try {
       const url = localStorage.getItem("ghqa:url");
-      const topic = localStorage.getItem("ghqa:topic");
+      // const topic = localStorage.getItem("ghqa:topic");
       const n = localStorage.getItem("ghqa:n");
 
       if (url) document.getElementById("repoUrl").value = url;
-      if (topic) document.getElementById("topic").value = topic;
+      // if (topic) document.getElementById("topic").value = topic;
       if (n) {
         document.getElementById("numQ").value = n;
         document.getElementById("qval").textContent = n;
@@ -394,14 +394,14 @@
 
   async function runAnalysis() {
     const urlEl = document.getElementById("repoUrl");
-    const topicEl = document.getElementById("topic");
+    // const topicEl = document.getElementById("topic"); // topic removed
     const nEl = document.getElementById("numQ");
     const outEl = document.getElementById("output");
     const status = document.getElementById("statusText");
     const errEl = document.getElementById("errorMsg");
 
     const url = urlEl.value.trim();
-    const topic = topicEl.value.trim();
+    // const topic = topicEl.value.trim(); // topic removed
     const n = Number(nEl.value);
 
     errEl.textContent = "";
@@ -489,22 +489,34 @@
     // Range value bubble
     const range = document.getElementById("numQ");
     const qval = document.getElementById("qval");
-    range.addEventListener("input", () => { qval.textContent = range.value; });
+    if (range && qval) {
+      range.addEventListener("input", () => { qval.textContent = range.value; });
+    }
 
-    // Enter submits from text inputs
-    const formInputs = [document.getElementById("repoUrl"), document.getElementById("topic")];
-    formInputs.forEach(el => el.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") {
-        e.preventDefault();
-        runAnalysis();
-      }
-    }));
+    // Only add event listeners if elements exist
+    const runBtn = document.getElementById("runBtn");
+    if (runBtn) runBtn.addEventListener("click", runAnalysis);
 
-    // Buttons
-    document.getElementById("runBtn").addEventListener("click", runAnalysis);
-    document.getElementById("clearBtn").addEventListener("click", clearAll);
-    document.getElementById("copyBtn").addEventListener("click", copyOutput);
-    document.getElementById("downloadBtn").addEventListener("click", downloadOutput);
+    const clearBtn = document.getElementById("clearBtn");
+    if (clearBtn) clearBtn.addEventListener("click", clearAll);
+
+    const copyBtn = document.getElementById("copyBtn");
+    if (copyBtn) copyBtn.addEventListener("click", copyOutput);
+
+    const downloadBtn = document.getElementById("downloadBtn");
+    if (downloadBtn) downloadBtn.addEventListener("click", downloadOutput);
+
+    // Enter submits from text inputs (only if present)
+    const repoUrl = document.getElementById("repoUrl");
+    if (repoUrl) {
+      repoUrl.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          runAnalysis();
+        }
+      });
+    }
+    // topic field removed, so skip
   });
 </script>
 </head>
