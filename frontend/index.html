@@ -251,7 +251,7 @@
       overflow: hidden; clip: rect(0,0,0,0);
       border: 0; white-space: nowrap;
     }
-      .qa-q {
+    .qa-q {
     color: var(--color-primary);
     font-weight: 600;
   }
@@ -261,180 +261,189 @@
   }
   </style>
 
-  <script type="module">
-    import { Client } from "https://cdn.jsdelivr.net/npm/@gradio/client/dist/index.min.js";
+<script type="module">
+  import { Client } from "https://cdn.jsdelivr.net/npm/@gradio/client/dist/index.min.js";
 
-    let client = null;
-    let connecting = false;
+  let client = null;
+  let connecting = false;
 
-    async function ensureClient() {
-      if (client || connecting) return client;
-      connecting = true;
-      try {
-        client = await Client.connect("PraneshJs/GithubprojectQandA");
-        return client;
-      } finally {
-        connecting = false;
+  async function ensureClient() {
+    if (client || connecting) return client;
+    connecting = true;
+    try {
+      client = await Client.connect("PraneshJs/GithubprojectQandA");
+      return client;
+    } finally {
+      connecting = false;
+    }
+  }
+
+  // Simple GitHub repo URL validation
+  function isValidRepoUrl(url) {
+    const pattern = /^https?:\/\/(www\.)?github\.com\/[^\/\s]+\/[^\/\s#?]+\/?$/i;
+    return pattern.test(url);
+  }
+
+  function setRunningState(running, message = "") {
+    const runBtn = document.getElementById("runBtn");
+    const clearBtn = document.getElementById("clearBtn");
+    const copyBtn = document.getElementById("copyBtn");
+    const status = document.getElementById("statusText");
+    const spin = document.getElementById("spinner");
+
+    runBtn.disabled = running;
+    clearBtn.disabled = running;
+    copyBtn.disabled = running;
+
+    if (running) {
+      spin.style.display = "inline-block";
+      status.textContent = message || "Processing…";
+    } else {
+      spin.style.display = "none";
+      status.textContent = message || "";
+    }
+  }
+
+  function saveState() {
+    try {
+      const url = document.getElementById("repoUrl").value.trim();
+      const topic = document.getElementById("topic").value.trim();
+      const n = document.getElementById("numQ").value;
+      localStorage.setItem("ghqa:url", url);
+      localStorage.setItem("ghqa:topic", topic);
+      localStorage.setItem("ghqa:n", n);
+    } catch {}
+  }
+
+  function restoreState() {
+    try {
+      const url = localStorage.getItem("ghqa:url");
+      const topic = localStorage.getItem("ghqa:topic");
+      const n = localStorage.getItem("ghqa:n");
+
+      if (url) document.getElementById("repoUrl").value = url;
+      if (topic) document.getElementById("topic").value = topic;
+      if (n) {
+        document.getElementById("numQ").value = n;
+        document.getElementById("qval").textContent = n;
       }
-    }
+    } catch {}
+  }
 
-    // Simple GitHub repo URL validation
-    function isValidRepoUrl(url) {
-      const pattern = /^https?:\/\/(www\.)?github\.com\/[^\/\s]+\/[^\/\s#?]+\/?$/i;
-      return pattern.test(url);
-    }
-
-    function setRunningState(running, message = "") {
-      const runBtn = document.getElementById("runBtn");
-      const clearBtn = document.getElementById("clearBtn");
-      const copyBtn = document.getElementById("copyBtn");
-      const status = document.getElementById("statusText");
-      const spin = document.getElementById("spinner");
-
-      runBtn.disabled = running;
-      clearBtn.disabled = running;
-      copyBtn.disabled = running;
-
-      if (running) {
-        spin.style.display = "inline-block";
-        status.textContent = message || "Processing…";
+  // Render only Q&A section, color Q and A differently
+  function renderQAColored(qaText) {
+    let qaSection = qaText;
+    // Remove everything before Q&A: (case-insensitive)
+    const idx = qaSection.search(/Q&A:/i);
+    if (idx !== -1) qaSection = qaSection.slice(idx + 4);
+    qaSection = qaSection.trim();
+    // Color Q and A lines
+    return qaSection.split('\n').map(line => {
+      if (/^Q\d*:/.test(line.trim())) {
+        return `<span class="qa-q">${line}</span>`;
+      } else if (/^A\d*:/.test(line.trim())) {
+        return `<span class="qa-a">${line}</span>`;
       } else {
-        spin.style.display = "none";
-        status.textContent = message || "";
+        return line;
       }
+    }).join('<br>');
+  }
+
+  async function runAnalysis() {
+    const urlEl = document.getElementById("repoUrl");
+    const topicEl = document.getElementById("topic");
+    const nEl = document.getElementById("numQ");
+    const outEl = document.getElementById("output");
+    const status = document.getElementById("statusText");
+    const errEl = document.getElementById("errorMsg");
+
+    const url = urlEl.value.trim();
+    const topic = topicEl.value.trim();
+    const n = Number(nEl.value);
+
+    errEl.textContent = "";
+    outEl.textContent = "";
+
+    if (!url) {
+      errEl.textContent = "Please enter a GitHub repository URL (required).";
+      urlEl.focus();
+      return;
+    }
+    if (!isValidRepoUrl(url)) {
+      errEl.textContent = "Please enter a valid GitHub repo URL like https://github.com/owner/repo";
+      urlEl.focus();
+      return;
     }
 
-    function saveState() {
-      try {
-        const url = document.getElementById("repoUrl").value.trim();
-        const topic = document.getElementById("topic").value.trim();
-        const n = document.getElementById("numQ").value;
-        localStorage.setItem("ghqa:url", url);
-        localStorage.setItem("ghqa:topic", topic);
-        localStorage.setItem("ghqa:n", n);
-      } catch {}
+    saveState();
+    setRunningState(true, "Connecting…");
+    outEl.setAttribute("aria-busy", "true");
+
+    try {
+      const cli = await ensureClient();
+      setRunningState(true, "Analyzing repository…");
+      await cli.predict("/on_analyze", { url });
+
+      setRunningState(true, "Generating Q&A…");
+      const qa = await cli.predict("/on_generate", { n });
+
+      // Only show Q&A section, colored
+      const qaContent = (qa?.data?.[0] ?? "");
+      outEl.innerHTML = renderQAColored(qaContent);
+      status.textContent = "Done";
+
+    } catch (err) {
+      document.getElementById("errorMsg").textContent = "Error: " + (err?.message || err);
+    } finally {
+      setRunningState(false);
+      outEl.setAttribute("aria-busy", "false");
     }
+  }
 
-    function restoreState() {
-      try {
-        const url = localStorage.getItem("ghqa:url");
-        const topic = localStorage.getItem("ghqa:topic");
-        const n = localStorage.getItem("ghqa:n");
+  function clearAll() {
+    document.getElementById("output").textContent = "";
+    document.getElementById("errorMsg").textContent = "";
+    document.getElementById("statusText").textContent = "";
+    document.getElementById("repoUrl").focus();
+  }
 
-        if (url) document.getElementById("repoUrl").value = url;
-        if (topic) document.getElementById("topic").value = topic;
-        if (n) {
-          document.getElementById("numQ").value = n;
-          document.getElementById("qval").textContent = n;
-        }
-      } catch {}
-    }
-
-    async function runAnalysis() {
-      const urlEl = document.getElementById("repoUrl");
-      const topicEl = document.getElementById("topic");
-      const nEl = document.getElementById("numQ");
-      const outEl = document.getElementById("output");
+  async function copyOutput() {
+    const outEl = document.getElementById("output");
+    const text = outEl.textContent.trim();
+    if (!text) return;
+    try {
+      await navigator.clipboard.writeText(text);
       const status = document.getElementById("statusText");
-      const errEl = document.getElementById("errorMsg");
+      status.textContent = "Copied to clipboard";
+      setTimeout(() => {
+        if (status.textContent === "Copied to clipboard") status.textContent = "";
+      }, 1200);
+    } catch {}
+  }
 
-      const url = urlEl.value.trim();
-      const topic = topicEl.value.trim();
-      const n = Number(nEl.value);
+  // Keyboard and UI setup
+  window.addEventListener("DOMContentLoaded", () => {
+    restoreState();
+    // Range value bubble
+    const range = document.getElementById("numQ");
+    const qval = document.getElementById("qval");
+    range.addEventListener("input", () => { qval.textContent = range.value; });
 
-      errEl.textContent = "";
-      outEl.textContent = "";
-
-      if (!url) {
-        errEl.textContent = "Please enter a GitHub repository URL (required).";
-        urlEl.focus();
-        return;
+    // Enter submits from text inputs
+    const formInputs = [document.getElementById("repoUrl"), document.getElementById("topic")];
+    formInputs.forEach(el => el.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        runAnalysis();
       }
-      if (!isValidRepoUrl(url)) {
-        errEl.textContent = "Please enter a valid GitHub repo URL like https://github.com/owner/repo";
-        urlEl.focus();
-        return;
-      }
+    }));
 
-      saveState();
-      setRunningState(true, "Connecting…");
-      outEl.setAttribute("aria-busy", "true");
-
-      try {
-        const cli = await ensureClient();
-        setRunningState(true, "Analyzing repository…");
-        const analysis = await cli.predict("/on_analyze", { url });
-
-        let askResult = "";
-        if (topic) {
-          setRunningState(true, "Fetching topic insights…");
-          const ask = await cli.predict("/on_ask_one", { topic });
-          askResult = "\n\nOptional Topic Insights:\n" + (ask?.data?.[0] ?? "");
-        }
-
-        setRunningState(true, "Generating Q&A…");
-        const qa = await cli.predict("/on_generate", { n });
-
-        const content =
-          "Analysis:\n" + (analysis?.data?.[0] ?? "") +
-          askResult +
-          "\n\nQ&A:\n" + (qa?.data?.[0] ?? "");
-
-        outEl.textContent = content;
-        status.textContent = "Done";
-
-      } catch (err) {
-        document.getElementById("errorMsg").textContent = "Error: " + (err?.message || err);
-      } finally {
-        setRunningState(false);
-        outEl.setAttribute("aria-busy", "false");
-      }
-    }
-
-    function clearAll() {
-      document.getElementById("output").textContent = "";
-      document.getElementById("errorMsg").textContent = "";
-      document.getElementById("statusText").textContent = "";
-      document.getElementById("repoUrl").focus();
-    }
-
-    async function copyOutput() {
-      const outEl = document.getElementById("output");
-      const text = outEl.textContent.trim();
-      if (!text) return;
-      try {
-        await navigator.clipboard.writeText(text);
-        const status = document.getElementById("statusText");
-        status.textContent = "Copied to clipboard";
-        setTimeout(() => {
-          if (status.textContent === "Copied to clipboard") status.textContent = "";
-        }, 1200);
-      } catch {}
-    }
-
-    // Keyboard and UI setup
-    window.addEventListener("DOMContentLoaded", () => {
-      restoreState();
-      // Range value bubble
-      const range = document.getElementById("numQ");
-      const qval = document.getElementById("qval");
-      range.addEventListener("input", () => { qval.textContent = range.value; });
-
-      // Enter submits from text inputs
-      const formInputs = [document.getElementById("repoUrl"), document.getElementById("topic")];
-      formInputs.forEach(el => el.addEventListener("keydown", (e) => {
-        if (e.key === "Enter") {
-          e.preventDefault();
-          runAnalysis();
-        }
-      }));
-
-      // Buttons
-      document.getElementById("runBtn").addEventListener("click", runAnalysis);
-      document.getElementById("clearBtn").addEventListener("click", clearAll);
-      document.getElementById("copyBtn").addEventListener("click", copyOutput);
-    });
-  </script>
+    // Buttons
+    document.getElementById("runBtn").addEventListener("click", runAnalysis);
+    document.getElementById("clearBtn").addEventListener("click", clearAll);
+    document.getElementById("copyBtn").addEventListener("click", copyOutput);
+  });
+</script>
 </head>
 <body>
   <div class="container">
