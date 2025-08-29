@@ -6,7 +6,7 @@
   --color-border: #e0def4;    /* Light border */
   --color-danger: #ea4a5a;    /* Vibrant red */
   --color-q: #3e8ed0;         /* Blue for Q */
-  --color-a: #ffb86b;         /* Peach for A */
+  --color-a: #2a273f;         /* Peach for A */
 }
 
 @media (prefers-color-scheme: dark) {
