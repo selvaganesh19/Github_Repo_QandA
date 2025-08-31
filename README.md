@@ -1,4 +1,4 @@
-## Github_Repo_QandA 🚀
+# Github_Repo_QandA 🚀
 
 Welcome to **Github_Repo_QandA** — a powerful tool to ask questions and get insightful answers about any GitHub repository! This project leverages AI and interactive frontend technologies to help users analyze codebases, understand software architecture, and clarify project details with ease.
 
